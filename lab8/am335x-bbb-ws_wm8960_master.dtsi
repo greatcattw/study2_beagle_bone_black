@@ -1,0 +1,116 @@
+/*
+with TI am335x BSP 06.03.00.106
+with HAOYU / www.hotmcu.com cape
+greatcat@ms18.hinet.net
+20210118       
+If this document helps you and buy street cats a fish can.
+*/
+// ref am43x-epos-evm.dts
+
+#include <dt-bindings/interrupt-controller/irq.h>
+
+&am33xx_pinmux {
+
+		i2c1_pins: pinmux_i2c1_pins {
+			pinctrl-single,pins = <
+				AM33XX_IOPAD(0x958, PIN_INPUT_PULLUP | MUX_MODE2)      /* spi0_d1.i2c1_sda_mux3 */
+				AM33XX_IOPAD(0x95c, PIN_INPUT_PULLUP | MUX_MODE2)      /* spi0_cs0.i2c1_scl_mux3 */
+			>;
+	   	};
+
+		gcat_audio2_pins: pinmux_marsboard_audio_pins {
+			pinctrl-single,pins = <
+			AM33XX_IOPAD(0x86c, PIN_INPUT_PULLDOWN | MUX_MODE7) /* (V17) gpmc_a11.gpio1[27] */
+			AM33XX_IOPAD(0x9ac, PIN_OUTPUT | MUX_MODE0) /* (A14) mcasp0_ahclkx.mcasp0_ahclkx */
+
+			AM33XX_IOPAD(0x990, PIN_INPUT_PULLDOWN | MUX_MODE0) /* (A13) mcasp0_aclkx.mcasp0_aclkx */
+			AM33XX_IOPAD(0x994, PIN_INPUT_PULLDOWN | MUX_MODE0) /* (B13) mcasp0_fsx.mcasp0_fsx */
+			AM33XX_IOPAD(0x998, PIN_OUTPUT_PULLDOWN | MUX_MODE0) /* (D12) mcasp0_axr0.mcasp0_axr0 */
+			AM33XX_IOPAD(0x99c, PIN_INPUT_PULLDOWN | MUX_MODE2) /* (C12) mcasp0_ahclkr.mcasp0_axr2 */
+
+			>;
+		};
+
+};
+
+&i2c0 {
+	tda19988: tda19988@70 {
+		status = "disabled";
+	};
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+
+	status = "okay";
+	clock-frequency = <100000>;
+
+	wm8960: wm8960@1a {
+		#sound-dai-cells = <0>;
+ 		compatible = "wlf,wm8960";
+		reg = <0x1a>;
+		status = "okay";
+	};
+};
+
+&mcasp0 {
+	#sound-dai-cells = <0>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&gcat_audio2_pins>;
+
+
+        status = "okay";
+
+        op-mode = <0>;          /* MCASP_IIS_MODE */
+        tdm-slots = <2>;
+        num-serializer = <4>;
+        serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
+                1 0 2 0
+        >;
+        tx-num-evt = <1>;
+        rx-num-evt = <1>;
+};
+
+
+/{
+
+
+	clk_mcasp0_fixed: clk_mcasp0_fixed {
+		status = "disabled";
+	};
+
+	clk_mcasp0: clk_mcasp0 {
+		status = "disabled";
+	};
+
+
+
+
+	pcm5102:pcm5102{
+		compatible = "ti,pcm5102a";
+		#sound-dai-cells = <0>;
+	};
+
+	sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "AM335x-gcat";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,bitclock-master = <&sound_master>;
+		simple-audio-card,frame-master = <&sound_master>;
+		simple-audio-card,mclk-fs = <512>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&mcasp0>;
+			system-clock-frequency = <24000000>;
+		};
+
+		sound_master:simple-audio-card,codec {
+			sound-dai = <&wm8960>;
+			system-clock-frequency = <24000000>;
+		};
+
+	};
+};
+
+
