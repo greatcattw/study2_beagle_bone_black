@@ -1,0 +1,46 @@
+/*
+with TI am335x BSP 06.03.00.106
+greatcat@ms18.hinet.net
+Search youtube to get document : linux beaglebon greatcat lab
+20210202      
+If this document helps you and buy street cats a fish can.
+*/
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+&am33xx_pinmux {
+		gcat_wakeup_pins:gcat_wakeup_pins {
+			pinctrl-single,pins = < 
+				AM33XX_IOPAD(0x964, PIN_INPUT_PULLUP | MUX_MODE7) /* (C18) eCAP0_in_PWM0_out.gpio0[7] */
+				AM33XX_IOPAD(0x9a0, PIN_INPUT | MUX_MODE7) /* (B12) mcasp0_aclkr.gpio3[18] */
+			>;
+		};
+};
+
+
+
+&i2c0 {
+	tda19988: tda19988@70 {
+		status = "disabled";
+	};
+};
+
+&i2c2 {
+	pcf8563: pcf8563@51 {
+		pinctrl-names= "default";
+		pinctrl-0 = <&gcat_wakeup_pins>;
+
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;	
+
+		status = "okay";
+                interrupt-parent = <&gpio0>;
+                interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
+		wakeup-source;
+	};
+};	
+
+&rtc {
+	status = "disabled";
+};
